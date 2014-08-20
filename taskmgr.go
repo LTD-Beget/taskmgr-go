@@ -183,6 +183,7 @@ func (self *TaskMgr) GenerateId() Id {
 
 // create new task
 func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice int, ionice int, maxretries int, id Id) (<-chan exec.Cmd, error) {
+    self.logger.Printf("New task received: %s (%#v)", id, command)
 	task := self.findTask(&id, self.tasks[Waiting])
 	if task == nil {
 		task = &Task{
