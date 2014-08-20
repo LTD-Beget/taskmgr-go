@@ -143,10 +143,10 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 		task.endTime = &now
 		if err != nil {
 			task.state = Fail
-			log.Printf("[task %d] failed.", task.id)
+			log.Printf("[task %s] failed.", task.id)
 		} else {
 			task.state = Complete
-			log.Printf("[task %d] completed successfully", task.id)
+			log.Printf("[task %s] completed successfully", task.id)
 		}
         select {
         case task.notify <-*task.Cmd:
