@@ -318,7 +318,7 @@ func (self *TaskMgr) Run() {
 
 			self.workers.Add(1)
 			go func() {
-				self.logger.Printf("Worker %d: STARTING TASK %#v", i, task)
+				self.logger.Printf("Worker %d: STARTING TASK %v", i, task)
 				err := task.Start(self.logger, self.addToCgroup)
 				self.queues.Lock()
 				heap.Remove(&self.tasks[Running], task.index)
@@ -329,7 +329,7 @@ func (self *TaskMgr) Run() {
 				}
 				self.queues.Unlock()
 				self.workers.Done()
-				self.logger.Printf("Worker %d: TASK DONE %#v", i, task)
+				self.logger.Printf("Worker %d: TASK DONE %v", i, task)
 			}()
 		}
 		self.logger.Printf("Waiting for workers to complete...")
