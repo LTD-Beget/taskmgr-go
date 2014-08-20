@@ -1,5 +1,7 @@
 package taskmgr
 
+import "github.com/twinj/uuid"
+
 // Possible task states
 const (
 	Waiting    = 0
@@ -19,10 +21,8 @@ type Server string
 type Login  string
 
 type Empty struct{}
-type Id int
+type Id uuid.UUID
 type State int
-
-const TaskZero = Id(0)
 
 // for GetStatus
 type TaskInfo struct {

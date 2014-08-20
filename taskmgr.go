@@ -1,5 +1,6 @@
 package taskmgr
 
+import "github.com/twinj/uuid"
 import "os/exec"
 import "log"
 import "fmt"
@@ -176,6 +177,10 @@ func (self *TaskMgr) ListTasks(which *State, reply *Tasks) error {
 
 }
 
+func (self *TaskMgr) GenerateId() Id {
+    return Id(uuid.NewV4())
+}
+
 // create new task
 func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice int, ionice int, maxretries int, id Id) (<-chan exec.Cmd, error) {
 	task := self.findTask(&id, self.tasks[Waiting])
@@ -220,7 +225,7 @@ func (self *TaskMgr) StartTask(which *Id, reply *Empty) error {
 	if task == nil {
 		return errors.New(fmt.Sprintf("[task %d] not found", *which))
 	}
-    if task.depends != Id(0) {
+    if task.depends != nil {
     }
 	go task.Start(self.logger, self.addToCgroup)
 	return nil
@@ -348,7 +353,7 @@ func New(logger log.Logger, parallel int, name string) *TaskMgr {
         logger.Fatal("cgroups not mounted at /sys/fs/cgroup")
     }
     err = os.Mkdir(path.Join(CgroupPath, name), 0700)
-    if err != nil {
+    if err != nil && !os.IsExist(err) {
         logger.Print(err)
     }
 
