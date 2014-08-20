@@ -48,8 +48,6 @@ type Task struct {
 	maxretries       int
 	nice             int
 	ionice           int
-	allowedTimeStart *time.Time
-	allowedTimeEnd   *time.Time
 
 	// command & process
 	*exec.Cmd
@@ -61,6 +59,16 @@ type Task struct {
 	endTime   *time.Time
 
     notify    chan exec.Cmd
+}
+
+func (t *Task) String() string {
+    return fmt.Sprintf("id: [%s] cmd: [%s] group: [%s] state: [%s]",
+        t.id, func(cmd *exec.Cmd) string {
+            if cmd == nil {
+                return "none"
+            } else {
+                return fmt.Sprintf("%v", (*cmd))
+            }}(t.Cmd), t.group, t.state)
 }
 
 func (pq PriorityQueue) Len() int { return len(pq) }

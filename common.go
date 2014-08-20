@@ -24,6 +24,27 @@ type Empty struct{}
 type Id uuid.UUID
 type State int
 
+func (state State) String() string {
+    switch state {
+    case Waiting:
+        return "waiting"
+    case Ready:
+        return "ready"
+    case Running:
+        return "running"
+    case Stop:
+        return "stopped"
+    case Complete:
+        return "complete"
+    case Fail:
+        return "fail"
+    case Abort:
+        return "aborted"
+    default:
+        return "INVALID STATE"
+    }
+}
+
 // for GetStatus
 type TaskInfo struct {
 	Path   Path
