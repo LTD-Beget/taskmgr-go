@@ -53,7 +53,7 @@ type Task struct {
 	*exec.Cmd
 
 	// state
-	state     int
+	state     State
 	retries   int
 	startTime *time.Time
 	endTime   *time.Time
@@ -178,7 +178,7 @@ func (self *TaskMgr) ListTasks(which *State, reply *Tasks) error {
 		} else {
 			pid = -1
 		}
-		tasks[i] = TaskInfo{Path: Path(v.Path), Args: v.Args, Pid: pid, Status: v.state}
+		tasks[i] = TaskInfo{Path: Path(v.Path), Args: v.Args, Pid: pid, Status: int(v.state)}
 	}
 	*reply = Tasks(tasks)
 	return nil
