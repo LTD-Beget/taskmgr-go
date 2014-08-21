@@ -29,25 +29,25 @@ type TaskMgr struct {
 	// a queue for each task state
 	tasks [Nqueue]PriorityQueue
 
-    name     string
+	name string
 
 	logger *log.Logger
 	die    bool
 }
 
 type Task struct {
-    // for heap
+	// for heap
 	index    int
 	priority int
 
 	// parameters
-	id               Id
-	depends          Id
-	conflicts        Group
-	group            Group
-	maxretries       int
-	nice             int
-	ionice           int
+	id         Id
+	depends    Id
+	conflicts  Group
+	group      Group
+	maxretries int
+	nice       int
+	ionice     int
 
 	// command & process
 	*exec.Cmd
@@ -58,17 +58,18 @@ type Task struct {
 	startTime *time.Time
 	endTime   *time.Time
 
-    notify    chan exec.Cmd
+	notify chan exec.Cmd
 }
 
 func (t *Task) String() string {
-    return fmt.Sprintf("id: [%s] cmd: [%s] group: [%s] state: [%s]",
-        t.id, func(cmd *exec.Cmd) string {
-            if cmd == nil {
-                return "none"
-            } else {
-                return fmt.Sprintf("%v", (*cmd))
-            }}(t.Cmd), t.group, t.state)
+	return fmt.Sprintf("id: [%s] cmd: [%s] group: [%s] state: [%s]",
+		t.id, func(cmd *exec.Cmd) string {
+			if cmd == nil {
+				return "none"
+			} else {
+				return fmt.Sprintf("%v", (*cmd))
+			}
+		}(t.Cmd), t.group, t.state)
 }
 
 func (pq PriorityQueue) Len() int { return len(pq) }
@@ -103,17 +104,17 @@ func (pq *PriorityQueue) Pop() interface{} {
 }
 
 func GetStdout(cmd *exec.Cmd) string {
-    if cmd.Stdout == nil {
-        return ""
-    }
-    return cmd.Stdout.(*bytes.Buffer).String()
+	if cmd.Stdout == nil {
+		return ""
+	}
+	return cmd.Stdout.(*bytes.Buffer).String()
 }
 
 func GetStderr(cmd *exec.Cmd) string {
-    if cmd.Stdout == nil {
-        return ""
-    }
-    return cmd.Stderr.(*bytes.Buffer).String()
+	if cmd.Stdout == nil {
+		return ""
+	}
+	return cmd.Stderr.(*bytes.Buffer).String()
 }
 
 // Start task and wait for it to finish synchronously
@@ -145,7 +146,7 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 		task.state = Fail
 	} else {
 		task.state = Running
-        onStart(task.Cmd.Process.Pid)
+		onStart(task.Cmd.Process.Pid)
 		err := task.Cmd.Wait()
 		now = time.Now()
 		task.endTime = &now
@@ -156,7 +157,7 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 			task.state = Complete
 			log.Printf("[task %s] completed successfully", task.id)
 		}
-        task.notify <-*task.Cmd
+		task.notify <- *task.Cmd
 	}
 	return err
 }
@@ -181,12 +182,12 @@ func (self *TaskMgr) ListTasks(which *State, reply *Tasks) error {
 }
 
 func (self *TaskMgr) GenerateId() Id {
-    return Id(uuid.NewV4())
+	return Id(uuid.NewV4())
 }
 
 // create new task
 func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice int, ionice int, maxretries int, id Id) (<-chan exec.Cmd, error) {
-    self.logger.Printf("New task received: %s (%#v)", id, command)
+	self.logger.Printf("New task received: %s (%#v)", id, command)
 	task := self.findTask(&id, self.tasks[Waiting])
 	if task == nil {
 		task = &Task{
@@ -197,7 +198,7 @@ func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice i
 			nice:       nice,
 			ionice:     ionice,
 			maxretries: maxretries,
-            notify:     make(chan exec.Cmd),
+			notify:     make(chan exec.Cmd),
 		}
 		//self.Lock()
 		heap.Push(&self.tasks[Waiting], task)
@@ -209,19 +210,19 @@ func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice i
 }
 
 func (self *TaskMgr) addToCgroup(pid int) {
-    f, err := os.OpenFile(fmt.Sprintf(path.Join(CgroupPath, self.name, "tasks")), os.O_WRONLY | os.O_APPEND, 0700)
-    if err != nil {
-        self.logger.Printf("Can't add %d to cgroup: %v", pid, err)
-        return
-    }
-    defer f.Close()
-    wr := bufio.NewWriter(f)
-    _, err = wr.WriteString(fmt.Sprintf("%d\n", pid))
-    if err != nil {
-        self.logger.Printf("Can't add %d to cgroup: %v", pid, err)
-        return
-    }
-    wr.Flush()
+	f, err := os.OpenFile(fmt.Sprintf(path.Join(CgroupPath, self.name, "tasks")), os.O_WRONLY|os.O_APPEND, 0700)
+	if err != nil {
+		self.logger.Printf("Can't add %d to cgroup: %v", pid, err)
+		return
+	}
+	defer f.Close()
+	wr := bufio.NewWriter(f)
+	_, err = wr.WriteString(fmt.Sprintf("%d\n", pid))
+	if err != nil {
+		self.logger.Printf("Can't add %d to cgroup: %v", pid, err)
+		return
+	}
+	wr.Flush()
 }
 
 func (self *TaskMgr) StartTask(which *Id, reply *Empty) error {
@@ -229,8 +230,8 @@ func (self *TaskMgr) StartTask(which *Id, reply *Empty) error {
 	if task == nil {
 		return errors.New(fmt.Sprintf("[task %d] not found", *which))
 	}
-    if task.depends != nil {
-    }
+	if task.depends != nil {
+	}
 	go task.Start(self.logger, self.addToCgroup)
 	return nil
 }
@@ -348,20 +349,20 @@ func (self *TaskMgr) init() {
 }
 
 func New(logger log.Logger, parallel int, name string) *TaskMgr {
-    taskmgr := &TaskMgr{logger: &logger, parallel: parallel, name: name }
+	taskmgr := &TaskMgr{logger: &logger, parallel: parallel, name: name}
 
-    logger.SetPrefix(fmt.Sprintf("[%s] ", name))
+	logger.SetPrefix(fmt.Sprintf("[%s] ", name))
 
-    _, err := os.Stat(path.Join(CgroupPath, "tasks"))
-    if err != nil {
-        logger.Fatal("cgroups not mounted at /sys/fs/cgroup")
-    }
-    err = os.Mkdir(path.Join(CgroupPath, name), 0700)
-    if err != nil && !os.IsExist(err) {
-        logger.Print(err)
-    }
+	_, err := os.Stat(path.Join(CgroupPath, "tasks"))
+	if err != nil {
+		logger.Fatal("cgroups not mounted at /sys/fs/cgroup")
+	}
+	err = os.Mkdir(path.Join(CgroupPath, name), 0700)
+	if err != nil && !os.IsExist(err) {
+		logger.Print(err)
+	}
 
-    taskmgr.init()
+	taskmgr.init()
 
 	return taskmgr
 }
