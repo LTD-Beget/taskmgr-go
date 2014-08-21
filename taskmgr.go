@@ -117,6 +117,16 @@ func GetStderr(cmd *exec.Cmd) string {
 	return cmd.Stderr.(*bytes.Buffer).String()
 }
 
+func WaitAll(wait [](<-chan exec.Cmd)) []exec.Cmd {
+    results := make([]exec.Cmd, len(wait))
+
+    for i, w := range wait {
+        res :=<-w
+        results[i] = res
+    }
+    return results
+}
+
 // Start task and wait for it to finish synchronously
 func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 	now := time.Now()
