@@ -67,7 +67,7 @@ func (t *Task) String() string {
 			if cmd == nil {
 				return "none"
 			} else {
-				return fmt.Sprintf("%v", (*cmd))
+				return fmt.Sprintf("%v", (*cmd).Args)
 			}
 		}(t.Cmd), t.group, t.state)
 }
