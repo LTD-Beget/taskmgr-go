@@ -118,13 +118,13 @@ func GetStderr(cmd *exec.Cmd) string {
 }
 
 func WaitAll(wait [](<-chan exec.Cmd)) []exec.Cmd {
-    results := make([]exec.Cmd, len(wait))
+	results := make([]exec.Cmd, len(wait))
 
-    for i, w := range wait {
-        res :=<-w
-        results[i] = res
-    }
-    return results
+	for i, w := range wait {
+		res := <-w
+		results[i] = res
+	}
+	return results
 }
 
 // Start task and wait for it to finish synchronously
@@ -151,6 +151,7 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 	}
 	task.Cmd.Stdout = &stdout
 	task.Cmd.Stderr = &stderr
+	log.Printf("Task %v process starting", task)
 	err := task.Cmd.Start()
 	if err != nil {
 		task.state = Fail
@@ -158,6 +159,7 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 		task.state = Running
 		onStart(task.Cmd.Process.Pid)
 		err := task.Cmd.Wait()
+		log.Printf("Task %v process finished", task)
 		now = time.Now()
 		task.endTime = &now
 		if err != nil {
@@ -188,7 +190,6 @@ func (self *TaskMgr) ListTasks(which *State, reply *Tasks) error {
 	}
 	*reply = Tasks(tasks)
 	return nil
-
 }
 
 func (self *TaskMgr) GenerateId() Id {
