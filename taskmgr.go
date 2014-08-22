@@ -212,7 +212,7 @@ func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice i
 			nice:       nice,
 			ionice:     ionice,
 			maxretries: maxretries,
-			notify:     make(chan exec.Cmd),
+			notify:     make(chan exec.Cmd, 1),
 		}
 		//self.Lock()
 		heap.Push(&self.tasks[Waiting], task)
