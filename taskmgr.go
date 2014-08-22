@@ -170,6 +170,7 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 			log.Printf("[task %s] completed successfully", task.id)
 		}
 		task.notify <- *task.Cmd
+		close(task.notify)
 	}
 	return err
 }
