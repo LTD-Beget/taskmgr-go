@@ -169,10 +169,12 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 			task.state = Complete
 			log.Printf("[task %s] completed successfully", task.id)
 		}
-		log.Printf("Task %v SENDING NOTIFICATION", task)
-		task.notify <- *task.Cmd
-		log.Printf("Task %v NOTIFICATION SENT", task)
-		close(task.notify)
+		go func() {
+			log.Printf("Task %v SENDING NOTIFICATION", task)
+			task.notify <- *task.Cmd
+			log.Printf("Task %v NOTIFICATION SENT", task)
+			close(task.notify)
+		}()
 	}
 	return err
 }
