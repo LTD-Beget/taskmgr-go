@@ -257,7 +257,7 @@ func (self *TaskMgr) findTask(which *Id, where []*Task) *Task {
 		self.logger.Print("invalid task id (null)")
 		return nil
 	}
-	for _, task := range self.tasks[Waiting] {
+	for _, task := range where {
 		if task.id == *which {
 			return task
 		}
@@ -277,13 +277,55 @@ func (self *TaskMgr) StopTask(which *Id, reply *Empty) error {
 			self.log(task, "can't send signal to task")
 			return errors.New("Can't send signal to task")
 		} else {
-			task.state = Stop
+			self.setState(task, Stop)
 			self.log(task, "stopped")
 			return nil
 		}
 	} else {
 		self.log(task, "not running")
 		return errors.New("Task not running")
+	}
+	return nil
+}
+
+func (self *TaskMgr) setState(task *Task, newstate State) {
+	self.queues.Lock()
+	heap.Remove(&self.tasks[task.state], task.index)
+	heap.Push(&self.tasks[newstate], task)
+	task.state = newstate
+	self.queues.Unlock()
+}
+
+func (self *TaskMgr) Suspend() error {
+	for _, task := range self.tasks[Running] {
+		if task.state == Running {
+			err := syscall.Kill(task.Process.Pid, syscall.SIGSTOP)
+			if err != nil {
+				self.log(task, "can't send signal to task %v", task)
+				return fmt.Errorf("Can't send signal to task %v", task.id)
+			} else {
+				self.setState(task, Stop)
+				self.log(task, "stopped")
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
+func (self *TaskMgr) Resume() error {
+	for _, task := range self.tasks[Stop] {
+		if task.state == Running {
+			err := syscall.Kill(task.Process.Pid, syscall.SIGCONT)
+			if err != nil {
+				self.log(task, "can't send signal to task %v", task)
+				return fmt.Errorf("Can't send signal to task %v", task.id)
+			} else {
+				self.setState(task, Running)
+				self.log(task, "resumed")
+				return nil
+			}
+		}
 	}
 	return nil
 }
@@ -300,7 +342,7 @@ func (self *TaskMgr) ResumeTask(id *Id, reply *Empty) error {
 			self.log(task, "can't send signal to task")
 			return errors.New("Can't send signal to task")
 		} else {
-			task.state = Stop
+			self.setState(task, Stop)
 			self.log(task, "stopped")
 			return nil
 		}
