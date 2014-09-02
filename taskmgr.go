@@ -1,6 +1,7 @@
 package taskmgr
 
 import "github.com/twinj/uuid"
+import "github.com/LTD-Beget/ioprio-go"
 import "os/exec"
 import "log"
 import "fmt"
@@ -47,7 +48,7 @@ type Task struct {
 	group      Group
 	maxretries int
 	nice       int
-	ionice     int
+	ionice     ioprio.Prio
 
 	// command & process
 	*exec.Cmd
@@ -158,6 +159,8 @@ func (task *Task) Start(log *log.Logger, onStart func(pid int)) error {
 	} else {
 		task.state = Running
 		onStart(task.Cmd.Process.Pid)
+		syscall.Setpriority(syscall.PRIO_PROCESS, task.Cmd.Process.Pid, task.nice)
+		ioprio.SetIoPrio(ioprio.ProcessGroup, uint(task.Cmd.Process.Pid), ioprio.Idle, task.ionice)
 		err := task.Cmd.Wait()
 		log.Printf("Task %v process finished", task)
 		now = time.Now()
@@ -212,7 +215,7 @@ func (self *TaskMgr) NewTask(command exec.Cmd, group Group, priority int, nice i
 			group:      group,
 			priority:   priority,
 			nice:       nice,
-			ionice:     ionice,
+			ionice:     ioprio.Prio(ionice),
 			maxretries: maxretries,
 			notify:     make(chan exec.Cmd, 1),
 		}
